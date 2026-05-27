@@ -42,7 +42,7 @@ git clone [https://github.com/zi_1an/nord-planner.git](https://github.com/zi_1an
 cd nord-planner
 
 # 2. Wipe clean any partial lockfiles and install dependencies
-rm -rf node_modules package-lock.json
+rm -rf node_modules packages.json
 npm install
 
 # 3. STABLE RUNTIME BINDING (Universal Linux Fallback)
