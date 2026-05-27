@@ -50,4 +50,4 @@ npm install
 npm run force-bindownload || true
 
 # 4. Launch the application
-npm start
+npm start & electron .
