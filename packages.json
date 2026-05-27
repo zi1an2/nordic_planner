@@ -1,0 +1,22 @@
+{
+  "name": "nord-planner",
+  "version": "1.0.0",
+  "description": "A modern Nord-themed desktop productivity and time-blocking planner.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "linux-native": "electron . --enable-features=UseOzonePlatform --ozone-platform=wayland",
+    "force-bindownload": "node node_modules/electron/install.js"
+  },
+  "keywords": [
+    "electron",
+    "planner",
+    "nord",
+    "time-blocking"
+  ],
+  "author": "zi1an2",
+  "license": "GPL-3.0-or-later",
+  "dependencies": {
+    "electron": "^30.0.0"
+  }
+}
