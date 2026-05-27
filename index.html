@@ -1,0 +1,1167 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Nord Planner</title>
+        <style>
+            /* ==========================================================================
+       NORD COLOR PALETTE & VARIABLES
+       ========================================================================== */
+            :root {
+                --nord0: #2e3440; /* Polar Night */
+                --nord1: #3b4252;
+                --nord2: #434c5e;
+                --nord3: #4c566a;
+                --nord4: #d8dee9; /* Snow Storm */
+                --nord5: #e5e9f0;
+                --nord6: #eceff4;
+                --nord7: #8fbcbb; /* Frost */
+                --nord8: #88c0d0;
+                --nord9: #81a1c1;
+                --nord10: #5e81ac;
+                --nord11: #bf616a; /* Aurora */
+                --nord12: #d08770;
+                --nord13: #ebcb8b;
+                --nord14: #a3be8c;
+                --nord15: #b48ead;
+
+                --font-stack:
+                    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                    Helvetica, Arial, sans-serif, "Apple Color Emoji",
+                    "Segoe UI Emoji";
+                --sidebar-width: 240px;
+                --header-height: 60px;
+                --transition-speed: 0.2s;
+            }
+
+            /* ==========================================================================
+       BASE STYLES & LAYOUT
+       ========================================================================== */
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+                user-select: none;
+            }
+
+            body {
+                font-family: var(--font-stack);
+                background-color: var(--nord0);
+                color: var(--nord4);
+                height: 100vh;
+                overflow: hidden;
+                display: flex;
+            }
+
+            /* Custom Scrollbars */
+            ::-webkit-scrollbar {
+                width: 8px;
+                height: 8px;
+            }
+            ::-webkit-scrollbar-track {
+                background: var(--nord0);
+            }
+            ::-webkit-scrollbar-thumb {
+                background: var(--nord2);
+                border-radius: 4px;
+            }
+            ::-webkit-scrollbar-thumb:hover {
+                background: var(--nord3);
+            }
+
+            /* ==========================================================================
+       SIDEBAR WORKSPACE
+       ========================================================================== */
+            .sidebar {
+                width: var(--sidebar-width);
+                background-color: var(--nord1);
+                border-right: 1px solid var(--nord2);
+                display: flex;
+                flex-direction: column;
+                justify-between: space-between;
+                height: 100%;
+                z-index: 10;
+            }
+
+            .brand {
+                padding: 20px;
+                font-size: 14px;
+                font-weight: 600;
+                letter-spacing: 1px;
+                color: var(--nord8);
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                border-bottom: 1px solid var(--nord2);
+            }
+
+            .nav-group {
+                padding: 15px 10px;
+                flex-grow: 1;
+            }
+
+            .nav-item {
+                display: flex;
+                align-items: center;
+                padding: 10px 12px;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 14px;
+                margin-bottom: 4px;
+                color: var(--nord4);
+                transition:
+                    background-color var(--transition-speed),
+                    color var(--transition-speed);
+            }
+
+            .nav-item:hover {
+                background-color: var(--nord2);
+                color: var(--nord6);
+            }
+
+            .nav-item.active {
+                background-color: var(--nord3);
+                color: var(--nord8);
+                font-weight: 500;
+            }
+
+            .nav-icon {
+                margin-right: 12px;
+                width: 16px;
+                text-align: center;
+            }
+
+            .sidebar-footer {
+                padding: 15px;
+                font-size: 11px;
+                color: var(--nord3);
+                border-top: 1px solid var(--nord2);
+                text-align: center;
+            }
+
+            /* ==========================================================================
+       MAIN WORKSPACE LAYOUT
+       ========================================================================== */
+            .workspace {
+                flex-grow: 1;
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+                position: relative;
+            }
+
+            header {
+                height: var(--header-height);
+                border-bottom: 1px solid var(--nord2);
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 0 30px;
+                background-color: var(--nord0);
+            }
+
+            .view-title-container {
+                display: flex;
+                align-items: center;
+                gap: 15px;
+            }
+
+            .view-title {
+                font-size: 18px;
+                font-weight: 600;
+                color: var(--nord6);
+            }
+
+            .nav-controls {
+                display: flex;
+                gap: 8px;
+            }
+
+            button.btn {
+                background-color: var(--nord2);
+                color: var(--nord5);
+                border: none;
+                padding: 6px 12px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 13px;
+                font-family: var(--font-stack);
+                transition: background-color var(--transition-speed);
+            }
+
+            button.btn:hover {
+                background-color: var(--nord3);
+                color: var(--nord6);
+            }
+
+            button.btn-primary {
+                background-color: var(--nord10);
+                color: var(--nord6);
+            }
+
+            button.btn-primary:hover {
+                background-color: var(--nord9);
+            }
+
+            /* ==========================================================================
+       VIEW CONTAINERS
+       ========================================================================== */
+            .view-content {
+                flex-grow: 1;
+                padding: 25px;
+                overflow-y: auto;
+                display: none;
+            }
+
+            .view-content.active {
+                display: block;
+            }
+
+            /* ==========================================================================
+       DAILY/WEEKLY TIME-BLOCKING GRID
+       ========================================================================== */
+            .grid-container {
+                position: relative;
+                background: var(--nord1);
+                border-radius: 8px;
+                border: 1px solid var(--nord2);
+                display: flex;
+            }
+
+            .time-column {
+                width: 60px;
+                flex-shrink: 0;
+                border-right: 1px solid var(--nord2);
+                background-color: rgba(46, 52, 64, 0.4);
+            }
+
+            .time-slot-label {
+                height: 60px;
+                font-size: 11px;
+                color: var(--nord3);
+                text-align: center;
+                line-height: 20px;
+                padding-top: 2px;
+                border-bottom: 1px dashed rgba(67, 76, 94, 0.3);
+            }
+
+            .columns-wrapper {
+                display: flex;
+                flex-grow: 1;
+                position: relative;
+            }
+
+            .grid-column {
+                flex-grow: 1;
+                flex-basis: 0;
+                position: relative;
+                height: 1440px; /* 24 hours * 60px per hour */
+                border-right: 1px solid var(--nord2);
+                background-image: linear-gradient(
+                    var(--nord2) 1px,
+                    transparent 1px
+                );
+                background-size: 100% 60px; /* Represents hours */
+            }
+
+            .grid-column:last-child {
+                border-right: none;
+            }
+
+            .column-header-date {
+                position: sticky;
+                top: 0;
+                background: var(--nord1);
+                padding: 10px;
+                text-align: center;
+                font-size: 12px;
+                font-weight: 600;
+                border-bottom: 1px solid var(--nord2);
+                z-index: 5;
+            }
+
+            /* ==========================================================================
+       SCHEDULING BLOCKS (TIME BLOCKS)
+       ========================================================================== */
+            .time-block {
+                position: absolute;
+                left: 4px;
+                right: 4px;
+                border-radius: 6px;
+                padding: 6px 10px;
+                font-size: 12px;
+                color: var(--nord0);
+                font-weight: 500;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+                cursor: grab;
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                transition:
+                    box-shadow var(--transition-speed),
+                    transform var(--transition-speed);
+                border-left: 4px solid rgba(0, 0, 0, 0.2);
+            }
+
+            .time-block:active {
+                cursor: grabbing;
+                box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+                transform: scale(0.99);
+                z-index: 100 !important;
+            }
+
+            .time-block-title {
+                font-weight: 600;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .time-block-time {
+                font-size: 10px;
+                opacity: 0.8;
+            }
+
+            /* Resize Handle */
+            .resize-handle {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 8px;
+                cursor: ns-resize;
+                background: transparent;
+            }
+            .resize-handle:hover {
+                background: rgba(0, 0, 0, 0.1);
+            }
+
+            /* Category Colors Map */
+            .cat-work {
+                background-color: var(--nord8);
+                color: var(--nord0);
+            }
+            .cat-personal {
+                background-color: var(--nord14);
+                color: var(--nord0);
+            }
+            .cat-health {
+                background-color: var(--nord7);
+                color: var(--nord0);
+            }
+            .cat-focus {
+                background-color: var(--nord15);
+                color: var(--nord0);
+            }
+            .cat-urgent {
+                background-color: var(--nord11);
+                color: var(--nord6);
+            }
+
+            /* ==========================================================================
+       MONTHLY GRID CALENDAR
+       ========================================================================== */
+            .month-grid {
+                display: grid;
+                grid-template-columns: repeat(7, 1fr);
+                grid-auto-rows: minmax(120px, 1fr);
+                gap: 1px;
+                background-color: var(--nord2);
+                border: 1px solid var(--nord2);
+                border-radius: 8px;
+                overflow: hidden;
+            }
+
+            .month-day-header {
+                background-color: var(--nord1);
+                padding: 10px;
+                text-align: center;
+                font-size: 12px;
+                font-weight: 600;
+                color: var(--nord9);
+            }
+
+            .month-day-cell {
+                background-color: var(--nord0);
+                padding: 8px;
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+            }
+
+            .month-day-cell.outside {
+                background-color: rgba(53, 62, 82, 0.3);
+                color: var(--nord3);
+            }
+
+            .month-day-number {
+                font-size: 12px;
+                font-weight: 500;
+                margin-bottom: 4px;
+                align-self: flex-end;
+            }
+
+            .month-event-pill {
+                font-size: 11px;
+                padding: 2px 6px;
+                border-radius: 4px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                cursor: pointer;
+            }
+
+            /* ==========================================================================
+       SPLIT WORKSPACE: DETAILED EDITOR PANEL (NOTION INSPIRED)
+       ========================================================================== */
+            .editor-modal {
+                position: fixed;
+                top: 0;
+                right: -450px;
+                width: 450px;
+                height: 100vh;
+                background-color: var(--nord1);
+                border-left: 1px solid var(--nord2);
+                box-shadow: -5px 0 25px rgba(0, 0, 0, 0.3);
+                transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+                z-index: 1000;
+                display: flex;
+                flex-direction: column;
+                padding: 30px;
+            }
+
+            .editor-modal.open {
+                right: 0;
+            }
+
+            .editor-close {
+                align-self: flex-end;
+                background: none;
+                border: none;
+                color: var(--nord4);
+                font-size: 20px;
+                cursor: pointer;
+                margin-bottom: 20px;
+            }
+
+            .editor-field {
+                margin-bottom: 20px;
+            }
+
+            .editor-field label {
+                display: block;
+                font-size: 11px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                color: var(--nord3);
+                margin-bottom: 6px;
+                font-weight: 600;
+            }
+
+            .editor-input,
+            .editor-select,
+            .editor-textarea {
+                width: 100%;
+                background-color: var(--nord0);
+                border: 1px solid var(--nord2);
+                border-radius: 6px;
+                color: var(--nord6);
+                padding: 10px;
+                font-family: var(--font-stack);
+                font-size: 14px;
+            }
+
+            .editor-input:focus,
+            .editor-select:focus,
+            .editor-textarea:focus {
+                outline: none;
+                border-color: var(--nord8);
+            }
+
+            .editor-textarea {
+                height: 200px;
+                resize: none;
+                line-height: 1.5;
+            }
+
+            .editor-actions {
+                margin-top: auto;
+                display: flex;
+                justify-content: space-between;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="sidebar">
+            <div>
+                <div class="brand">
+                    <span style="color: var(--nord8); font-size: 18px">▰</span>
+                    NORD PLANNER
+                </div>
+                <div class="nav-group">
+                    <div class="nav-item active" data-view="day">
+                        <span class="nav-icon">☼</span> Daily View
+                    </div>
+                    <div class="nav-item" data-view="week">
+                        <span class="nav-icon">⚏</span> Weekly View
+                    </div>
+                    <div class="nav-item" data-view="month">
+                        <span class="nav-icon">▦</span> Monthly View
+                    </div>
+                </div>
+            </div>
+            <div class="sidebar-footer">
+                Ctrl+Shift+N to Quick Add<br />Auto-saved locally
+            </div>
+        </div>
+
+        <div class="workspace">
+            <header>
+                <div class="view-title-container">
+                    <span class="view-title" id="current-date-title"
+                        >Loading...</span
+                    >
+                </div>
+                <div class="nav-controls">
+                    <button class="btn" id="btn-today">Today</button>
+                    <button class="btn" id="btn-prev">◀</button>
+                    <button class="btn" id="btn-next">▶</button>
+                    <button
+                        class="btn btn-primary"
+                        id="btn-new-block"
+                        style="margin-left: 15px"
+                    >
+                        + Time Block
+                    </button>
+                </div>
+            </header>
+
+            <div id="view-day" class="view-content active">
+                <div class="grid-container">
+                    <div class="time-column" id="day-time-labels"></div>
+                    <div class="columns-wrapper">
+                        <div
+                            class="grid-column"
+                            id="day-column"
+                            data-day-offset="0"
+                        ></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-week" class="view-content">
+                <div class="grid-container">
+                    <div class="time-column" id="week-time-labels"></div>
+                    <div
+                        class="columns-wrapper"
+                        id="week-columns-container"
+                    ></div>
+                </div>
+            </div>
+
+            <div id="view-month" class="view-content">
+                <div class="month-grid" id="month-grid-container"></div>
+            </div>
+        </div>
+
+        <div class="editor-modal" id="editor-panel">
+            <button class="editor-close" id="editor-close">✕</button>
+
+            <div class="editor-field">
+                <label>Title</label>
+                <input
+                    type="text"
+                    id="edit-title"
+                    class="editor-input"
+                    placeholder="Untitled task"
+                />
+            </div>
+
+            <div class="editor-field">
+                <label>Category Space</label>
+                <select id="edit-category" class="editor-select">
+                    <option value="cat-work">Work Engineering</option>
+                    <option value="cat-personal">Personal / Life</option>
+                    <option value="cat-focus">Deep Focus Session</option>
+                    <option value="cat-health">Health / Fitness</option>
+                    <option value="cat-urgent">Urgent / Hard Deadline</option>
+                </select>
+            </div>
+
+            <div class="editor-field" style="display: flex; gap: 15px">
+                <div style="flex: 1">
+                    <label>Start Hour</label>
+                    <input
+                        type="number"
+                        id="edit-start"
+                        class="editor-input"
+                        min="0"
+                        max="23"
+                        step="1"
+                    />
+                </div>
+                <div style="flex: 1">
+                    <label>Duration (Hours)</label>
+                    <input
+                        type="number"
+                        id="edit-duration"
+                        class="editor-input"
+                        min="0.5"
+                        max="24"
+                        step="0.5"
+                    />
+                </div>
+            </div>
+
+            <div class="editor-field">
+                <label>Date</label>
+                <input type="date" id="edit-date" class="editor-input" />
+            </div>
+
+            <div
+                class="editor-field"
+                style="flex-grow: 1; display: flex; flex-direction: column"
+            >
+                <label>Notes & Canvas</label>
+                <textarea
+                    id="edit-notes"
+                    class="editor-textarea"
+                    placeholder="Add details, bullet points, or checkbox contexts..."
+                ></textarea>
+            </div>
+
+            <div class="editor-actions">
+                <button
+                    class="btn"
+                    id="btn-delete-block"
+                    style="background-color: var(--nord11); color: white"
+                >
+                    Delete
+                </button>
+                <button class="btn btn-primary" id="btn-save-block">
+                    Save Canvas
+                </button>
+            </div>
+        </div>
+
+        <script>
+            // --- STATE MANAGEMENT ---
+            let state = {
+                currentView: "day", // day, week, month
+                currentDate: new Date(),
+                blocks: JSON.parse(
+                    localStorage.getItem("nord_planner_blocks"),
+                ) || [
+                    {
+                        id: "initial-1",
+                        title: "Engineering Synclog & Flow",
+                        category: "cat-work",
+                        date: new Date().toISOString().split("T")[0],
+                        startHour: 9,
+                        duration: 1.5,
+                        notes: "Sync up with local systems setup.\nEnsure focus parameters are structured.",
+                    },
+                    {
+                        id: "initial-2",
+                        title: "Deep Work: Architecture Implementation",
+                        category: "cat-focus",
+                        date: new Date().toISOString().split("T")[0],
+                        startHour: 13,
+                        duration: 3,
+                        notes: "No system interruptions. Build native-facing single structural architectures.",
+                    },
+                ],
+                activeEditingId: null,
+            };
+
+            function saveState() {
+                localStorage.setItem(
+                    "nord_planner_blocks",
+                    JSON.stringify(state.blocks),
+                );
+            }
+
+            // --- INITIALIZATION ---
+            document.addEventListener("DOMContentLoaded", () => {
+                initTimeLabels();
+                setupEventListeners();
+                render();
+            });
+
+            // --- TIME LABELS GRID GENERATION ---
+            function initTimeLabels() {
+                const dayLabels = document.getElementById("day-time-labels");
+                const weekLabels = document.getElementById("week-time-labels");
+                let labelsHtml = "";
+                for (let i = 0; i < 24; i++) {
+                    const displayHour = i < 10 ? `0${i}:00` : `${i}:00`;
+                    labelsHtml += `<div class="time-slot-label">${displayHour}</div>`;
+                }
+                dayLabels.innerHTML = labelsHtml;
+                weekLabels.innerHTML = labelsHtml;
+            }
+
+            // --- INTERACTION NAVIGATION & UI REGISTER ---
+            function setupEventListeners() {
+                // Sidebar Navigation
+                document.querySelectorAll(".nav-item").forEach((item) => {
+                    item.addEventListener("click", (e) => {
+                        document
+                            .querySelectorAll(".nav-item")
+                            .forEach((i) => i.classList.remove("active"));
+                        e.currentTarget.classList.add("active");
+                        state.currentView =
+                            e.currentTarget.getAttribute("data-view");
+                        render();
+                    });
+                });
+
+                // Header Date Steps
+                document
+                    .getElementById("btn-today")
+                    .addEventListener("click", () => {
+                        state.currentDate = new Date();
+                        render();
+                    });
+
+                document
+                    .getElementById("btn-prev")
+                    .addEventListener("click", () => {
+                        adjustDate(-1);
+                    });
+
+                document
+                    .getElementById("btn-next")
+                    .addEventListener("click", () => {
+                        adjustDate(1);
+                    });
+
+                // Block Creation Window Action
+                document
+                    .getElementById("btn-new-block")
+                    .addEventListener("click", () => {
+                        openEditor(null);
+                    });
+
+                // Canvas / Editor Panel interactions
+                document
+                    .getElementById("editor-close")
+                    .addEventListener("click", closeEditor);
+                document
+                    .getElementById("btn-save-block")
+                    .addEventListener("click", saveBlockFromEditor);
+                document
+                    .getElementById("btn-delete-block")
+                    .addEventListener("click", deleteActiveBlock);
+
+                // Setup Native Electron IPC listeners safely via optional chaining
+                window.electron?.onGlobalQuickAdd?.(() => {
+                    openEditor(null);
+                });
+            }
+
+            function adjustDate(direction) {
+                if (state.currentView === "day") {
+                    state.currentDate.setDate(
+                        state.currentDate.getDate() + direction,
+                    );
+                } else if (state.currentView === "week") {
+                    state.currentDate.setDate(
+                        state.currentDate.getDate() + direction * 7,
+                    );
+                } else if (state.currentView === "month") {
+                    state.currentDate.setMonth(
+                        state.currentDate.getMonth() + direction,
+                    );
+                }
+                render();
+            }
+
+            // --- CORE RENDERING CONTROLLER ---
+            function render() {
+                // Update Active Content View Container Visibility
+                document
+                    .querySelectorAll(".view-content")
+                    .forEach((view) => view.classList.remove("active"));
+                document
+                    .getElementById(`view-${state.currentView}`)
+                    .classList.add("active");
+
+                // Sync Titles
+                const titleEl = document.getElementById("current-date-title");
+
+                if (state.currentView === "day") {
+                    titleEl.textContent = state.currentDate.toLocaleDateString(
+                        "en-US",
+                        {
+                            weekday: "long",
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                        },
+                    );
+                    renderDayView();
+                } else if (state.currentView === "week") {
+                    const startOfWeek = getStartOfWeek(state.currentDate);
+                    const endOfWeek = new Date(startOfWeek);
+                    endOfWeek.setDate(endOfWeek.getDate() + 6);
+                    titleEl.textContent = `${startOfWeek.toLocaleDateString("en-US", { month: "short", day: "numeric" })} – ${endOfWeek.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
+                    renderWeekView();
+                } else if (state.currentView === "month") {
+                    titleEl.textContent = state.currentDate.toLocaleDateString(
+                        "en-US",
+                        { month: "long", year: "numeric" },
+                    );
+                    renderMonthView();
+                }
+            }
+
+            // --- RENDER DAY VIEW ---
+            function renderDayView() {
+                const column = document.getElementById("day-column");
+                column.innerHTML = "";
+                const dateStr = state.currentDate.toISOString().split("T")[0];
+
+                const dailyBlocks = state.blocks.filter(
+                    (b) => b.date === dateStr,
+                );
+                dailyBlocks.forEach((block) => {
+                    column.appendChild(createBlockElement(block));
+                });
+            }
+
+            // --- RENDER WEEK VIEW ---
+            function renderWeekView() {
+                const container = document.getElementById(
+                    "week-columns-container",
+                );
+                container.innerHTML = "";
+
+                const startOfWeek = getStartOfWeek(state.currentDate);
+
+                for (let i = 0; i < 7; i++) {
+                    const currentColumnDate = new Date(startOfWeek);
+                    currentColumnDate.setDate(currentColumnDate.getDate() + i);
+                    const dateStr = currentColumnDate
+                        .toISOString()
+                        .split("T")[0];
+
+                    const colDiv = document.createElement("div");
+                    colDiv.className = "grid-column";
+
+                    // Internal Header per Column
+                    const dayHeader = document.createElement("div");
+                    dayHeader.className = "column-header-date";
+                    dayHeader.textContent =
+                        currentColumnDate.toLocaleDateString("en-US", {
+                            weekday: "short",
+                            day: "numeric",
+                        });
+                    colDiv.appendChild(dayHeader);
+
+                    // Filter and Map elements
+                    const columnBlocks = state.blocks.filter(
+                        (b) => b.date === dateStr,
+                    );
+                    columnBlocks.forEach((block) => {
+                        colDiv.appendChild(createBlockElement(block));
+                    });
+
+                    // HTML Setup implementation handle for drop target zone tracking
+                    colDiv.addEventListener("dragover", (e) => {
+                        e.preventDefault();
+                    });
+                    colDiv.addEventListener("drop", (e) =>
+                        handleDropOnColumn(e, dateStr),
+                    );
+
+                    container.appendChild(colDiv);
+                }
+            }
+
+            // --- RENDER MONTH VIEW ---
+            function renderMonthView() {
+                const container = document.getElementById(
+                    "month-grid-container",
+                );
+                container.innerHTML = "";
+
+                // Generate Weekday Headers
+                const daysOfWeek = [
+                    "Sun",
+                    "Mon",
+                    "Tue",
+                    "Wed",
+                    "Thu",
+                    "Fri",
+                    "Sat",
+                ];
+                daysOfWeek.forEach((d) => {
+                    const header = document.createElement("div");
+                    header.className = "month-day-header";
+                    header.textContent = d;
+                    container.appendChild(header);
+                });
+
+                const year = state.currentDate.getFullYear();
+                const month = state.currentDate.getMonth();
+
+                const firstDayIndex = new Date(year, month, 1).getDay();
+                const totalDays = new Date(year, month + 1, 0).getDate();
+                const prevTotalDays = new Date(year, month, 0).getDate();
+
+                // Render Padding Days from previous month
+                for (let i = firstDayIndex - 1; i >= 0; i--) {
+                    const dayNum = prevTotalDays - i;
+                    const cell = createMonthCell(dayNum, true);
+                    container.appendChild(cell);
+                }
+
+                // Render Active Days of the month
+                for (let i = 1; i <= totalDays; i++) {
+                    const currentCellDate = new Date(year, month, i);
+                    const dateStr = currentCellDate.toISOString().split("T")[0];
+
+                    const cell = createMonthCell(i, false, dateStr);
+
+                    // Fill event pills
+                    const dayBlocks = state.blocks.filter(
+                        (b) => b.date === dateStr,
+                    );
+                    dayBlocks.forEach((block) => {
+                        const pill = document.createElement("div");
+                        pill.className = `month-event-pill ${block.category}`;
+                        pill.textContent = block.title || "Untitled";
+                        pill.addEventListener("click", (e) => {
+                            e.stopPropagation();
+                            openEditor(block.id);
+                        });
+                        cell.appendChild(pill);
+                    });
+
+                    container.appendChild(cell);
+                }
+            }
+
+            function createMonthCell(num, isOutside, dateStr = null) {
+                const cell = document.createElement("div");
+                cell.className = `month-day-cell ${isOutside ? "outside" : ""}`;
+
+                const numLabel = document.createElement("div");
+                numLabel.className = "month-day-number";
+                numLabel.textContent = num;
+                cell.appendChild(numLabel);
+
+                if (!isOutside && dateStr) {
+                    cell.addEventListener("click", () => {
+                        const newBlock = {
+                            id: "b-" + Date.now(),
+                            title: "New Session",
+                            category: "cat-work",
+                            date: dateStr,
+                            startHour: 9,
+                            duration: 1,
+                            notes: "",
+                        };
+                        state.blocks.push(newBlock);
+                        saveState();
+                        openEditor(newBlock.id);
+                        render();
+                    });
+                }
+                return cell;
+            }
+
+            // --- ELEMENT CREATION WITH ADVANCED INTERACTION RESIZING & DRAG ---
+            function createBlockElement(block) {
+                const blockEl = document.createElement("div");
+                blockEl.className = `time-block ${block.category}`;
+
+                // Calculate continuous geometric layouts based on structural positioning
+                const topPosition = block.startHour * 60 + 40; // Offset allowance for inline columns
+                const blockHeight = block.duration * 60;
+
+                blockEl.style.top = `${topPosition}px`;
+                blockEl.style.height = `${blockHeight}px`;
+                blockEl.setAttribute("draggable", "true");
+
+                blockEl.innerHTML = `
+        <div class="time-block-title">${block.title || "Untitled"}</div>
+        <div class="time-block-time">${formatHour(block.startHour)} - ${formatHour(block.startHour + block.duration)}</div>
+        <div class="resize-handle"></div>
+      `;
+
+                // Trigger Details Editor
+                blockEl.addEventListener("click", (e) => {
+                    if (e.target.classList.contains("resize-handle")) return;
+                    openEditor(block.id);
+                });
+
+                // HTML5 Drag Event Handlers
+                blockEl.addEventListener("dragstart", (e) => {
+                    e.dataTransfer.setData("text/plain", block.id);
+                    blockEl.style.opacity = "0.5";
+                });
+
+                blockEl.addEventListener("dragend", () => {
+                    blockEl.style.opacity = "1";
+                });
+
+                // Interactive Resizing System implementation
+                const handle = blockEl.querySelector(".resize-handle");
+                handle.addEventListener("mousedown", (e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+
+                    const initialHeight = blockEl.offsetHeight;
+                    const initialStartY = e.clientY;
+
+                    function onMouseMove(moveEvent) {
+                        const deltaY = moveEvent.clientY - initialStartY;
+                        // Grid snapping parameters to 15-minute segments (15 mins = 15px)
+                        const newHeight = Math.max(30, initialHeight + deltaY);
+                        const snappedHeight = Math.round(newHeight / 15) * 15;
+
+                        blockEl.style.height = `${snappedHeight}px`;
+
+                        // Dynamically compute runtime update intervals
+                        const calculatedDuration = snappedHeight / 60;
+                        block.duration = calculatedDuration;
+                        blockEl.querySelector(".time-block-time").textContent =
+                            `${formatHour(block.startHour)} - ${formatHour(block.startHour + block.duration)}`;
+                    }
+
+                    function onMouseUp() {
+                        document.removeEventListener("mousemove", onMouseMove);
+                        document.removeEventListener("mouseup", onMouseUp);
+                        saveState();
+                        render();
+                    }
+
+                    document.addEventListener("mousemove", onMouseMove);
+                    document.addEventListener("mouseup", onMouseUp);
+                });
+
+                return blockEl;
+            }
+
+            function handleDropOnColumn(e, targetDateStr) {
+                e.preventDefault();
+                const blockId = e.dataTransfer.getData("text/plain");
+                const block = state.blocks.find((b) => b.id === blockId);
+
+                if (block) {
+                    block.date = targetDateStr;
+                    saveState();
+                    render();
+                }
+            }
+
+            // --- DETAILED EDITOR PANEL CONTROLS ---
+            function openEditor(id) {
+                const panel = document.getElementById("editor-panel");
+
+                if (!id) {
+                    // Build fresh template
+                    const placeholderId = "b-" + Date.now();
+                    const freshBlock = {
+                        id: placeholderId,
+                        title: "",
+                        category: "cat-work",
+                        date: state.currentDate.toISOString().split("T")[0],
+                        startHour: 9,
+                        duration: 1,
+                        notes: "",
+                    };
+                    state.blocks.push(freshBlock);
+                    state.activeEditingId = placeholderId;
+                } else {
+                    state.activeEditingId = id;
+                }
+
+                const activeBlock = state.blocks.find(
+                    (b) => b.id === state.activeEditingId,
+                );
+
+                // Map configuration structures down onto native form fields
+                document.getElementById("edit-title").value = activeBlock.title;
+                document.getElementById("edit-category").value =
+                    activeBlock.category;
+                document.getElementById("edit-start").value =
+                    activeBlock.startHour;
+                document.getElementById("edit-duration").value =
+                    activeBlock.duration;
+                document.getElementById("edit-date").value = activeBlock.date;
+                document.getElementById("edit-notes").value = activeBlock.notes;
+
+                panel.classList.add("open");
+            }
+
+            function closeEditor() {
+                document
+                    .getElementById("editor-panel")
+                    .classList.remove("open");
+                state.activeEditingId = null;
+            }
+
+            function saveBlockFromEditor() {
+                if (!state.activeEditingId) return;
+
+                const block = state.blocks.find(
+                    (b) => b.id === state.activeEditingId,
+                );
+                if (block) {
+                    block.title =
+                        document.getElementById("edit-title").value ||
+                        "Untitled Tasks";
+                    block.category =
+                        document.getElementById("edit-category").value;
+                    block.startHour =
+                        parseFloat(
+                            document.getElementById("edit-start").value,
+                        ) || 0;
+                    block.duration =
+                        parseFloat(
+                            document.getElementById("edit-duration").value,
+                        ) || 1;
+                    block.date = document.getElementById("edit-date").value;
+                    block.notes = document.getElementById("edit-notes").value;
+
+                    saveState();
+                    closeEditor();
+                    render();
+                }
+            }
+
+            function deleteActiveBlock() {
+                if (!state.activeEditingId) return;
+                state.blocks = state.blocks.filter(
+                    (b) => b.id !== state.activeEditingId,
+                );
+                saveState();
+                closeEditor();
+                render();
+            }
+
+            // --- HELPER MATH FUNCTIONS ---
+            function getStartOfWeek(date) {
+                const d = new Date(date);
+                const day = d.getDay();
+                const diff = d.getDate() - day + (day === 0 ? -6 : 0); // adjust when day is sunday
+                return new Date(d.setDate(diff));
+            }
+
+            function formatHour(h) {
+                const absoluteHour = Math.floor(h) % 24;
+                const minutes = Math.round((h % 1) * 60);
+                const padHour =
+                    absoluteHour < 10 ? `0${absoluteHour}` : absoluteHour;
+                const padMin = minutes < 10 ? `0${minutes}` : minutes;
+                return `${padHour}:${padMin}`;
+            }
+        </script>
+    </body>
+</html>
