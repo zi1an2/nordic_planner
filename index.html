@@ -256,13 +256,20 @@
                 flex-grow: 1;
                 flex-basis: 0;
                 position: relative;
-                height: 1440px; /* 24 hours * 60px per hour */
+                height: 1480px; /* 24 hours * 60px + 40px header */
                 border-right: 1px solid var(--nord2);
                 background-image: linear-gradient(
                     var(--nord2) 1px,
                     transparent 1px
                 );
                 background-size: 100% 60px; /* Represents hours */
+                background-position: 0 40px; /* Start grid lines below header */
+            }
+
+            .time-labels-header {
+                height: 40px;
+                border-bottom: 1px solid var(--nord2);
+                background-color: rgba(46, 52, 64, 0.4);
             }
 
             .grid-column:last-child {
@@ -695,7 +702,7 @@
             function initTimeLabels() {
                 const dayLabels = document.getElementById("day-time-labels");
                 const weekLabels = document.getElementById("week-time-labels");
-                let labelsHtml = "";
+                let labelsHtml = '<div class="time-labels-header"></div>';
                 for (let i = 0; i < 24; i++) {
                     const displayHour = i < 10 ? `0${i}:00` : `${i}:00`;
                     labelsHtml += `<div class="time-slot-label">${displayHour}</div>`;
@@ -825,12 +832,30 @@
                 column.innerHTML = "";
                 const dateStr = state.currentDate.toISOString().split("T")[0];
 
+                // Internal Header for Day Column
+                const dayHeader = document.createElement("div");
+                dayHeader.className = "column-header-date";
+                dayHeader.textContent = state.currentDate.toLocaleDateString("en-US", {
+                    weekday: "long",
+                    month: "short",
+                    day: "numeric",
+                });
+                column.appendChild(dayHeader);
+
                 const dailyBlocks = state.blocks.filter(
                     (b) => b.date === dateStr,
                 );
                 dailyBlocks.forEach((block) => {
                     column.appendChild(createBlockElement(block));
                 });
+
+                // Drop target zone tracking for Day view
+                column.addEventListener("dragover", (e) => {
+                    e.preventDefault();
+                });
+                column.addEventListener("drop", (e) =>
+                    handleDropOnColumn(e, dateStr),
+                );
             }
 
             // --- RENDER WEEK VIEW ---
@@ -1055,6 +1080,15 @@
 
                 if (block) {
                     block.date = targetDateStr;
+
+                    // Calculate drop start hour (relative to column vertical height)
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const y = e.clientY - rect.top;
+                    const gridY = y - 40; // 40px header offset
+                    const snappedY = Math.round(gridY / 15) * 15;
+                    const newStartHour = Math.max(0, Math.min(24 - block.duration, snappedY / 60));
+                    block.startHour = newStartHour;
+
                     saveState();
                     render();
                 }
@@ -1064,11 +1098,10 @@
             function openEditor(id) {
                 const panel = document.getElementById("editor-panel");
 
+                let activeBlock;
                 if (!id) {
-                    // Build fresh template
-                    const placeholderId = "b-" + Date.now();
-                    const freshBlock = {
-                        id: placeholderId,
+                    state.activeEditingId = "new";
+                    activeBlock = {
                         title: "",
                         category: "cat-work",
                         date: state.currentDate.toISOString().split("T")[0],
@@ -1076,15 +1109,12 @@
                         duration: 1,
                         notes: "",
                     };
-                    state.blocks.push(freshBlock);
-                    state.activeEditingId = placeholderId;
                 } else {
                     state.activeEditingId = id;
+                    activeBlock = state.blocks.find((b) => b.id === id);
                 }
 
-                const activeBlock = state.blocks.find(
-                    (b) => b.id === state.activeEditingId,
-                );
+                if (!activeBlock) return;
 
                 // Map configuration structures down onto native form fields
                 document.getElementById("edit-title").value = activeBlock.title;
@@ -1110,9 +1140,18 @@
             function saveBlockFromEditor() {
                 if (!state.activeEditingId) return;
 
-                const block = state.blocks.find(
-                    (b) => b.id === state.activeEditingId,
-                );
+                let block;
+                if (state.activeEditingId === "new") {
+                    block = {
+                        id: "b-" + Date.now(),
+                    };
+                    state.blocks.push(block);
+                } else {
+                    block = state.blocks.find(
+                        (b) => b.id === state.activeEditingId,
+                    );
+                }
+
                 if (block) {
                     block.title =
                         document.getElementById("edit-title").value ||
@@ -1138,10 +1177,12 @@
 
             function deleteActiveBlock() {
                 if (!state.activeEditingId) return;
-                state.blocks = state.blocks.filter(
-                    (b) => b.id !== state.activeEditingId,
-                );
-                saveState();
+                if (state.activeEditingId !== "new") {
+                    state.blocks = state.blocks.filter(
+                        (b) => b.id !== state.activeEditingId,
+                    );
+                    saveState();
+                }
                 closeEditor();
                 render();
             }

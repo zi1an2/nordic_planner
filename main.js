@@ -1,9 +1,11 @@
 const { app, BrowserWindow, globalShortcut } = require("electron");
 const path = require("path");
+const fs = require("fs");
 
 let mainWindow;
 
 function createWindow() {
+  const iconPath = "/home/zidane/Downloads/15533(1).jpg";
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
@@ -11,8 +13,9 @@ function createWindow() {
     minHeight: 600,
     title: "Nord Planner",
     backgroundColor: "#2E3440",
-    icon: path.join(__dirname, "/home/zidane/Downloads/15533(1).jpg"), // Optional native icon
+    icon: fs.existsSync(iconPath) ? iconPath : undefined,
     webPreferences: {
+      preload: path.join(__dirname, "preload.js"),
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: true,

@@ -38,11 +38,11 @@ The installation workflow below is designed to be **completely stable across all
 
 ```bash
 # 1. Clone the repository and jump into the directory
-git clone [https://github.com/zi_1an/nord-planner.git](https://github.com/zi_1an/nord-planner.git)
-cd nord-planner
+git clone https://github.com/zi1an2/nordic_planner.git
+cd nordic_planner
 
 # 2. Wipe clean any partial lockfiles and install dependencies
-rm -rf node_modules packages.json
+rm -rf node_modules package-lock.json
 npm install
 
 # 3. STABLE RUNTIME BINDING (Universal Linux Fallback)
@@ -50,4 +50,5 @@ npm install
 npm run force-bindownload || true
 
 # 4. Launch the application
-npm start & electron .
+npm start
+```
