@@ -518,6 +518,9 @@
                     <div class="nav-item" data-view="month">
                         <span class="nav-icon">▦</span> Monthly View
                     </div>
+                    <div class="nav-item" id="btn-manage-categories" style="margin-top: 15px; border-top: 1px dashed var(--nord2); border-radius: 0; padding-top: 15px;">
+                        <span class="nav-icon">⚙</span> Activity Types
+                    </div>
                 </div>
             </div>
             <div class="sidebar-footer">
@@ -590,11 +593,7 @@
             <div class="editor-field">
                 <label>Category Space</label>
                 <select id="edit-category" class="editor-select">
-                    <option value="cat-work">Work Engineering</option>
-                    <option value="cat-personal">Personal / Life</option>
-                    <option value="cat-focus">Deep Focus Session</option>
-                    <option value="cat-health">Health / Fitness</option>
-                    <option value="cat-urgent">Urgent / Hard Deadline</option>
+                    <!-- Options populated dynamically from state.categories -->
                 </select>
             </div>
 
@@ -654,8 +653,49 @@
             </div>
         </div>
 
+        <!-- Activity Types / Settings Modal -->
+        <div class="editor-modal" id="settings-panel">
+            <button class="editor-close" id="settings-close">✕</button>
+            <h2 style="font-size: 18px; font-weight: 600; color: var(--nord6); margin-bottom: 20px; border-bottom: 1px solid var(--nord2); padding-bottom: 10px;">Activity Types</h2>
+            
+            <div class="editor-field" style="flex-grow: 1; overflow-y: auto; margin-bottom: 20px;">
+                <label>Custom Activity Types</label>
+                <div id="category-list-container" style="display: flex; flex-direction: column; gap: 8px;">
+                    <!-- Categories rendered dynamically -->
+                </div>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid var(--nord2); margin-bottom: 20px;" />
+
+            <div class="editor-field">
+                <label>New Activity Type Name</label>
+                <input type="text" id="new-category-name" class="editor-input" placeholder="e.g. Learning / Research" style="margin-bottom: 12px;" />
+                
+                <label>Color Theme</label>
+                <select id="new-category-color" class="editor-select">
+                    <!-- Presets populated dynamically -->
+                </select>
+            </div>
+
+            <button class="btn btn-primary" id="btn-add-category" style="width: 100%; padding: 10px; font-weight: 600;">
+                + Add Activity Type
+            </button>
+        </div>
+
         <script>
             // --- STATE MANAGEMENT ---
+            const NORD_COLORS = {
+                "nord7": { bg: "#8fbcbb", fg: "#2e3440", label: "Teal (Frost)" },
+                "nord8": { bg: "#88c0d0", fg: "#2e3440", label: "Light Blue (Frost)" },
+                "nord9": { bg: "#81a1c1", fg: "#2e3440", label: "Medium Blue (Frost)" },
+                "nord10": { bg: "#5e81ac", fg: "#eceff4", label: "Dark Blue (Frost)" },
+                "nord11": { bg: "#bf616a", fg: "#eceff4", label: "Red (Aurora)" },
+                "nord12": { bg: "#d08770", fg: "#2e3440", label: "Orange (Aurora)" },
+                "nord13": { bg: "#ebcb8b", fg: "#2e3440", label: "Yellow (Aurora)" },
+                "nord14": { bg: "#a3be8c", fg: "#2e3440", label: "Green (Aurora)" },
+                "nord15": { bg: "#b48ead", fg: "#2e3440", label: "Purple (Aurora)" },
+            };
+
             let state = {
                 currentView: "day", // day, week, month
                 currentDate: new Date(),
@@ -681,6 +721,15 @@
                         notes: "No system interruptions. Build native-facing single structural architectures.",
                     },
                 ],
+                categories: JSON.parse(
+                    localStorage.getItem("nord_planner_categories"),
+                ) || [
+                    { id: "cat-work", name: "Work Engineering", colorKey: "nord8" },
+                    { id: "cat-personal", name: "Personal / Life", colorKey: "nord14" },
+                    { id: "cat-focus", name: "Deep Focus Session", colorKey: "nord15" },
+                    { id: "cat-health", name: "Health / Fitness", colorKey: "nord7" },
+                    { id: "cat-urgent", name: "Urgent / Hard Deadline", colorKey: "nord11" },
+                ],
                 activeEditingId: null,
             };
 
@@ -691,10 +740,49 @@
                 );
             }
 
+            function saveCategories() {
+                localStorage.setItem(
+                    "nord_planner_categories",
+                    JSON.stringify(state.categories),
+                );
+            }
+
+            function updateCategoryStyles() {
+                let styleEl = document.getElementById("dynamic-category-styles");
+                if (!styleEl) {
+                    styleEl = document.createElement("style");
+                    styleEl.id = "dynamic-category-styles";
+                    document.head.appendChild(styleEl);
+                }
+                
+                let css = "";
+                state.categories.forEach(cat => {
+                    const color = NORD_COLORS[cat.colorKey] || NORD_COLORS["nord8"];
+                    css += `
+                        .${cat.id} {
+                            background-color: ${color.bg} !important;
+                            color: ${color.fg} !important;
+                        }
+                    `;
+                });
+                styleEl.textContent = css;
+            }
+
+            function populateCategorySelects() {
+                const selectEl = document.getElementById("edit-category");
+                let optionsHtml = "";
+                state.categories.forEach(cat => {
+                    optionsHtml += `<option value="${cat.id}">${cat.name}</option>`;
+                });
+                selectEl.innerHTML = optionsHtml;
+            }
+
             // --- INITIALIZATION ---
             document.addEventListener("DOMContentLoaded", () => {
                 initTimeLabels();
                 setupEventListeners();
+                updateCategoryStyles();
+                populateCategorySelects();
                 render();
             });
 
@@ -716,14 +804,55 @@
                 // Sidebar Navigation
                 document.querySelectorAll(".nav-item").forEach((item) => {
                     item.addEventListener("click", (e) => {
+                        const view = e.currentTarget.getAttribute("data-view");
+                        if (!view) return; // Skip non-navigation sidebar items
                         document
                             .querySelectorAll(".nav-item")
                             .forEach((i) => i.classList.remove("active"));
                         e.currentTarget.classList.add("active");
-                        state.currentView =
-                            e.currentTarget.getAttribute("data-view");
+                        state.currentView = view;
                         render();
                     });
+                });
+
+                // Settings Panel Toggle
+                document.getElementById("btn-manage-categories").addEventListener("click", () => {
+                    renderCategoriesList();
+                    populateColorDropdown();
+                    document.getElementById("settings-panel").classList.add("open");
+                });
+
+                document.getElementById("settings-close").addEventListener("click", () => {
+                    document.getElementById("settings-panel").classList.remove("open");
+                });
+
+                document.getElementById("btn-add-category").addEventListener("click", () => {
+                    const nameInput = document.getElementById("new-category-name");
+                    const colorSelect = document.getElementById("new-category-color");
+                    
+                    const name = nameInput.value.trim();
+                    const colorKey = colorSelect.value;
+                    
+                    if (!name) {
+                        alert("Please enter a name for the activity type.");
+                        return;
+                    }
+                    
+                    const id = "cat-custom-" + Date.now();
+                    
+                    state.categories.push({
+                        id,
+                        name,
+                        colorKey
+                    });
+                    
+                    saveCategories();
+                    updateCategoryStyles();
+                    populateCategorySelects();
+                    renderCategoriesList();
+                    
+                    nameInput.value = "";
+                    render();
                 });
 
                 // Header Date Steps
@@ -1202,6 +1331,70 @@
                     absoluteHour < 10 ? `0${absoluteHour}` : absoluteHour;
                 const padMin = minutes < 10 ? `0${minutes}` : minutes;
                 return `${padHour}:${padMin}`;
+            }
+
+            // --- CATEGORY CUSTOMIZATION MANAGER ---
+            function deleteCategory(catId) {
+                if (state.categories.length <= 1) {
+                    alert("You must keep at least one activity type.");
+                    return;
+                }
+                
+                state.categories = state.categories.filter(c => c.id !== catId);
+                
+                const fallbackCatId = state.categories[0].id;
+                state.blocks.forEach(block => {
+                    if (block.category === catId) {
+                        block.category = fallbackCatId;
+                    }
+                });
+                
+                saveCategories();
+                saveState();
+                updateCategoryStyles();
+                populateCategorySelects();
+                renderCategoriesList();
+                render();
+            }
+
+            function populateColorDropdown() {
+                const colorSelect = document.getElementById("new-category-color");
+                let optionsHtml = "";
+                for (const [key, color] of Object.entries(NORD_COLORS)) {
+                    optionsHtml += `<option value="${key}">${color.label}</option>`;
+                }
+                colorSelect.innerHTML = optionsHtml;
+            }
+
+            function renderCategoriesList() {
+                const listContainer = document.getElementById("category-list-container");
+                listContainer.innerHTML = "";
+                
+                state.categories.forEach(cat => {
+                    const color = NORD_COLORS[cat.colorKey] || NORD_COLORS["nord8"];
+                    
+                    const item = document.createElement("div");
+                    item.style.display = "flex";
+                    item.style.alignItems = "center";
+                    item.style.justifyContent = "space-between";
+                    item.style.padding = "8px 12px";
+                    item.style.backgroundColor = "var(--nord0)";
+                    item.style.border = "1px solid var(--nord2)";
+                    item.style.borderRadius = "6px";
+                    
+                    item.innerHTML = `
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background-color: ${color.bg}; border: 1px solid rgba(0,0,0,0.15);"></span>
+                            <span style="font-size: 13px; font-weight: 500; color: var(--nord6);">${cat.name}</span>
+                        </div>
+                        <button class="btn" style="padding: 2px 6px; background-color: rgba(191,97,106,0.15); color: var(--nord11); border: 1px solid rgba(191,97,106,0.3); font-size: 11px; border-radius: 4px;" id="btn-del-cat-${cat.id}">Delete</button>
+                    `;
+                    listContainer.appendChild(item);
+                    
+                    item.querySelector(`#btn-del-cat-${cat.id}`).addEventListener("click", () => {
+                        deleteCategory(cat.id);
+                    });
+                });
             }
         </script>
     </body>

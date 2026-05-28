@@ -1,54 +1,55 @@
 # ▰ Nord Planner
 
-A lightweight, minimal, and lightning-fast desktop productivity and time-blocking planner inspired by the aesthetics of Notion and the workflow of Sunsama. 
+Hey there! Welcome to **Nord Planner** — a clean, calm, and lightning-fast desktop planner built to help you map out your day without the noise. It brings together the clean, minimal aesthetic of Notion with the distraction-free workflow of Sunsama.
 
-Built entirely with Electron and vanilla web technologies, Nord Planner runs locally, offline-first, and saves data straight to your local environment with zero third-party cloud tracking.
+Because it is built strictly with Electron and vanilla web technologies, it is 100% offline-first. Your data is stored safely on your own machine with absolutely zero cloud syncing, data tracking, or telemetry. Just a peaceful space to focus on your day.
 
 ![Nord Theme](https://raw.githubusercontent.com/arcticicestudio/nord/main/assets/nord-banner.png)
 
-## Features
+## ✨ What it does
 
-* **Time-Blocking Grid:** Drag, drop, and fluidly resize your daily schedule into 15-minute intervals.
-* **Split-Pane Workspace:** Click any time block to pull open a canvas panel for deep markdown-style notes and task sub-items.
-* **Multi-View Navigation:** Switch smoothly between Daily tracking, Weekly overviews, and Monthly planning calendars.
-* **Nord Palette Interface:** Easy on the eyes. Fully themed using the authentic Arctic Ice Studio Nord spectrum.
-* **Privacy-First:** Completely serverless. No databases, no telemetry, and auto-saves instantly via local browser persistence layers.
+* **Fluid Time-Blocking:** Schedule your day by dragging, dropping, and resizing tasks directly on your grid, snapped to 15-minute intervals.
+* **Custom Activity Types:** Personalize your workspace! Add, rename, and delete your own custom categories (like 'Learning', 'Work', 'Personal') using beautiful presets from the official Nord palette.
+* **Split-Pane Notes:** Click any task block to open a sidebar canvas for detailed markdown-style notes, ideas, and checkbox sub-items.
+* **Views for Every Scope:** Seamlessly switch between a detailed Daily view, a structured Weekly view, and a Monthly overview calendar.
+* **Easy on the Eyes:** Styled entirely around the beautiful, muted Arctic Ice Studio Nord spectrum, making it comfortable to use day or night.
+* **100% Private & Serverless:** No web logins, no database servers, and no trackers. Everything is auto-saved locally in browser storage.
 
 ---
 
-## Dependencies & Requirements
+## ⚙️ Under the Hood
 
-To maintain a zero-bloat architecture, this application avoids large framework ecosystems (no React, Tailwind, Vite, or TypeScript). It relies strictly on the minimum required runtimes for desktop isolation:
+To keep things bloat-free and running at absolute peak performance, this app avoids large frontend frameworks like React, Vue, Vite, or Tailwind. It's just raw HTML, Native CSS variables/grids, and lightweight asynchronous JavaScript.
 
-### System Requirements
+### What you need:
 * **Node.js:** v18.0.0 or higher (Fully tested on v26+)
 * **npm:** v9.0.0 or higher
 
-### Core Dependencies
-* **Electron (`^30.0.0`):** Handles native OS window rendering, Linux desktop integration, system-level sandboxing, and global keyboard shortcuts.
-* **Vanilla Web Stack:** Standard HTML5, Native CSS Grid/Variables, and pure asynchronous JavaScript for performance and ultra-low RAM usage.
+### Key dependencies:
+* **Electron (`^30.0.0`):** Handles native window rendering, global keyboard shortcuts, and desktop integration.
+* **Vanilla Web Stack:** Pure HTML5/CSS/JS for near-zero RAM usage and instant loading speeds.
 
 ---
 
-## Installation & Setup
+## 🚀 Let's get started
 
-Because Linux distributions handle Node.js and binary sandboxing differently, standard `npm install` routines can sometimes fail to pull the underlying native Electron binaries. 
+Because different Linux distributions handle Node.js and binary sandboxing differently, standard `npm install` routines can occasionally fail to pull the underlying native Electron binaries. 
 
-The installation workflow below is designed to be **completely stable across all Linux distributions** (Arch, CachyOS, Ubuntu, Debian, Fedora, and openSUSE) by utilizing an explicit binary extraction fallback or bridging directly to system runtimes.
+This installation flow is verified to work cleanly and stably across Arch, CachyOS, Ubuntu, Debian, Fedora, and openSUSE:
 
 ```bash
-# 1. Clone the repository and jump into the directory
+# 1. Clone the repository and enter the directory
 git clone https://github.com/zi1an2/nordic_planner.git
 cd nordic_planner
 
-# 2. Wipe clean any partial lockfiles and install dependencies
+# 2. Clear out any local cache and install fresh packages
 rm -rf node_modules package-lock.json
 npm install
 
-# 3. STABLE RUNTIME BINDING (Universal Linux Fallback)
-# If npm skips downloading the native binary, force-extract it manually:
+# 3. Linux compatibility helper
+# If npm skips downloading the native Electron binary, force it:
 npm run force-bindownload || true
 
-# 4. Launch the application
+# 4. Launch the application!
 npm start
 ```
